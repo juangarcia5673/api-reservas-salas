@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reservas de salas - Notificaciones en vivo</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    #estado { font-weight: 600; }
+    li { margin: .4rem 0; padding: .5rem .75rem; background: #f1f5f9; border-radius: 6px; list-style: none; }
+    ul { padding: 0; }
+    code { font-size: .85rem; }
+  </style>
+</head>
+<body>
+  <h1>Notificaciones en tiempo real</h1>
+  <p>Estado: <span id="estado">conectando…</span></p>
+  <p>Cree, modifique o elimine una reserva desde Postman/curl y el evento aparecerá aquí al instante.</p>
+  <ul id="registro"></ul>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const estado = document.getElementById('estado');
+    const registro = document.getElementById('registro');
+    const agregar = (tipo, datos) => {
+      const li = document.createElement('li');
+      li.textContent = `${new Date().toLocaleTimeString()} — ${tipo}: `;
+      const code = document.createElement('code');
+      code.textContent = JSON.stringify(datos);   // textContent evita inyectar HTML
+      li.appendChild(code);
+      registro.prepend(li);
+    };
+    socket.on('connect', () => { estado.textContent = 'conectado'; });
+    socket.on('disconnect', () => { estado.textContent = 'desconectado'; });
+    ['bienvenida', 'reserva:creada', 'reserva:actualizada', 'reserva:eliminada']
+      .forEach((nombre) => socket.on(nombre, (datos) => agregar(nombre, datos)));
+  </script>
+</body>
+</html>
